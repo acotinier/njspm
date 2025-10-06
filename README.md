@@ -2,7 +2,8 @@
 
 > A modern desktop application for managing and executing commands across multiple Node.js projects with ease.
 
-[INSERT SCREENSHOT: Main application window showing the project dashboard with multiple project cards]
+<img width="1425" height="802" alt="Main application window showing the project dashboard with multiple project cards" src="https://github.com/user-attachments/assets/b646a677-964c-4178-9b6e-0073a5ee93a4" />
+
 
 ## Overview
 
@@ -18,7 +19,7 @@
 - **💾 Import/Export** - Backup and restore your project configurations
 - **🖥️ Cross-Platform** - Works on Windows, macOS, and Linux
 
-[INSERT SCREENSHOT: Project configuration modal showing directory selection and command setup]
+<img width="675" height="654" alt="Project configuration modal showing directory selection and command setup" src="https://github.com/user-attachments/assets/6bcf5115-0034-4711-b20a-729b7c1af777" />
 
 ## Installation
 
@@ -63,13 +64,12 @@ The built application will be in the `dist-electron/` directory.
    - Add commands with name, command, and optional description
 4. Click **"Save Project"**
 
-[INSERT SCREENSHOT: Adding commands to a project - showing the command form fields]
-
 ### Executing Commands
 
 Simply click any command button on a project card. The command will execute in a new terminal window in the project's directory.
 
-[INSERT SCREENSHOT: Multiple terminal windows opened from executing commands]
+<img width="1430" height="801" alt="Multiple terminal windows opened from executing commands" src="https://github.com/user-attachments/assets/7d51a967-aed1-4f34-b832-191db25be658" />
+
 
 ### Managing Projects
 
@@ -85,7 +85,8 @@ Access settings via the gear icon in the top-right corner:
 - **Import Projects** - Load projects from a JSON file
 - **Export Projects** - Save all projects to a JSON file
 
-[INSERT SCREENSHOT: Settings modal showing theme options and import/export buttons]
+<img width="518" height="745" alt="Settings modal showing theme options and import/export buttons" src="https://github.com/user-attachments/assets/eca728a1-1531-4df1-a14b-7533bea013b3" />
+
 
 ## Project Structure
 
