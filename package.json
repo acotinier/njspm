@@ -1,0 +1,59 @@
+{
+  "author": "DevCot",
+  "name": "n.js-pm",
+  "version": "1.1.2",
+  "description": "Node.JS Project Manager",
+  "main": "electron.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"pnpm run dev:vite\" \"pnpm run dev:electron\"",
+    "dev:vite": "vite --host",
+    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .",
+    "build": "vite build",
+    "build:electron": "pnpm run build && electron-builder",
+    "preview": "vite preview"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@10.12.2",
+  "build": {
+    "appId": "com.devcot.njspm",
+    "productName": "NodeJS Project Manager",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.js",
+      "preload.cjs",
+      "public/favicon.ico"
+    ],
+    "win": {
+      "icon": "public/favicon.ico",
+      "target": "nsis"
+    },
+    "mac": {
+      "icon": "public/favicon.icns",
+      "target": "dmg"
+    },
+    "linux": {
+      "icon": "public/favicon.png",
+      "target": "AppImage"
+    }
+  },
+  "dependencies": {
+    "lucide-react": "^0.544.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.13",
+    "@vitejs/plugin-react": "^4.7.0",
+    "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
+    "electron": "^36.9.1",
+    "electron-builder": "^26.0.12",
+    "tailwindcss": "^4.1.13",
+    "vite": "^6.3.6",
+    "wait-on": "^8.0.5"
+  }
+}

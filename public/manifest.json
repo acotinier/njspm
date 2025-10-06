@@ -1,0 +1,16 @@
+{
+  "name": "Projects Dashboard",
+  "short_name": "ProjectsDash",
+  "description": "Gérez vos projets de développement en un seul endroit",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}
