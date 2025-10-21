@@ -8,6 +8,8 @@ export const createProject = (name, description = '') => ({
   name,
   description,
   createdAt: new Date().toISOString(),
+  tags: [],
+  isPinned: false,
   app: null,
   api: null
 })

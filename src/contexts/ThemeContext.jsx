@@ -35,7 +35,7 @@ export const ThemeProvider = ({ children }) => {
 
   // Charger le thème depuis localStorage
   useEffect(() => {
-    const savedTheme = localStorage.getItem('electron-monit-theme')
+    const savedTheme = localStorage.getItem('njspm-theme')
     if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
       setTheme(savedTheme)
     }
@@ -44,20 +44,17 @@ export const ThemeProvider = ({ children }) => {
   // Appliquer le thème au document
   useEffect(() => {
     const effectiveTheme = theme === 'system' ? systemTheme : theme
-    
-    console.log('Applying theme:', theme, 'effective:', effectiveTheme)
-    
+
     if (effectiveTheme === 'dark') {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
     }
     
-    localStorage.setItem('electron-monit-theme', theme)
+    localStorage.setItem('njspm-theme', theme)
   }, [theme, systemTheme])
 
   const setThemeMode = (newTheme) => {
-    console.log('Changing theme to:', newTheme)
     setTheme(newTheme)
   }
 

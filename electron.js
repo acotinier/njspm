@@ -11,7 +11,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const createWindow = () => {
   const iconPath = path.join(__dirname, 'icon.ico')
-  console.log('Trying to use icon at:', iconPath)
 
   const win = new BrowserWindow({
     width: 1200,
@@ -26,8 +25,6 @@ const createWindow = () => {
       webSecurity: true
     }
   })
-  
-  console.log('BrowserWindow created with icon')
 
   const isDev = process.env.NODE_ENV === 'development'
   
@@ -54,31 +51,46 @@ app.on('window-all-closed', () => {
   }
 })
 
+// ==========================================
+// IPC HANDLERS
+// ==========================================
+
+// Window Management Handlers
+ipcMain.handle('minimize-window', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender)
+  if (window) window.minimize()
+})
+
+ipcMain.handle('maximize-window', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender)
+  if (window) {
+    window.isMaximized() ? window.unmaximize() : window.maximize()
+  }
+})
+
+ipcMain.handle('close-window', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender)
+  if (window) window.close()
+})
+
+// File System Handlers
 ipcMain.handle('select-directory', async () => {
   const result = await dialog.showOpenDialog({
     properties: ['openDirectory']
   })
-  
-  if (result.canceled) {
-    return null
-  }
-  
-  return result.filePaths[0]
+  return result.canceled ? null : result.filePaths[0]
 })
 
+// Command Execution Handler
 ipcMain.handle('execute-command', async (event, command, workingDirectory) => {
-  console.log('Executing command:', command)
-  console.log('Working directory:', workingDirectory)
-  
   try {
     const isWindows = process.platform === 'win32'
 
     if (isWindows) {
-      // Utiliser le dossier temporaire système
       const batchContent = `@echo off
-                            cd /d "${workingDirectory}"
-                            ${command}
-                            pause`
+cd /d "${workingDirectory}"
+${command}
+pause`
       const uniqueId = Date.now() + '_' + Math.random().toString(36).substr(2, 9)
       const tempBatFile = path.join(os.tmpdir(), `njspm_command_${uniqueId}.bat`)
       fs.writeFileSync(tempBatFile, batchContent)
@@ -87,21 +99,18 @@ ipcMain.handle('execute-command', async (event, command, workingDirectory) => {
         detached: true,
         stdio: 'ignore'
       })
-
       terminal.unref()
 
-      // Nettoyage du fichier temporaire après 10 secondes (plus de temps pour éviter les conflits)
       setTimeout(() => {
         try {
           fs.unlinkSync(tempBatFile)
         } catch (e) {
-          console.log('Could not delete temp file:', tempBatFile, e.message)
+          // Silently fail - temp file cleanup is not critical
         }
       }, 10000)
 
       return { success: true, message: 'Terminal ouvert avec succès' }
     } else {
-      // Pour macOS/Linux
       const isMac = process.platform === 'darwin'
 
       if (isMac) {
@@ -113,7 +122,6 @@ ipcMain.handle('execute-command', async (event, command, workingDirectory) => {
           stdio: 'ignore'
         })
       } else {
-        // Linux
         spawn('gnome-terminal', ['--', 'bash', '-c', `cd '${workingDirectory}' && ${command}; exec bash`], {
           detached: true,
           stdio: 'ignore'
@@ -125,31 +133,5 @@ ipcMain.handle('execute-command', async (event, command, workingDirectory) => {
   } catch (error) {
     console.error('Error executing command:', error)
     return { success: false, error: error.message }
-  }
-})
-
-// ADD these new IPC handlers
-ipcMain.handle('minimize-window', (event) => {
-  const window = BrowserWindow.fromWebContents(event.sender)
-  if (window) {
-    window.minimize()
-  }
-})
-
-ipcMain.handle('maximize-window', (event) => {
-  const window = BrowserWindow.fromWebContents(event.sender)
-  if (window) {
-    if (window.isMaximized()) {
-      window.unmaximize()
-    } else {
-      window.maximize()
-    }
-  }
-})
-
-ipcMain.handle('close-window', (event) => {
-  const window = BrowserWindow.fromWebContents(event.sender)
-  if (window) {
-    window.close()
   }
 })
