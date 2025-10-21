@@ -1,7 +1,7 @@
 {
   "author": "DevCot",
   "name": "n.js-pm",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Node.JS Project Manager",
   "main": "electron.js",
   "type": "module",
