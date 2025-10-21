@@ -1,4 +1,4 @@
-const PROJECTS_KEY = 'electron-monit-projects'
+const PROJECTS_KEY = 'njspm-projects'
 
 export const projectStore = {
   getProjects() {
@@ -46,7 +46,7 @@ export const projectStore = {
   duplicateProject(projectId) {
     const projects = this.getProjects()
     const projectToDuplicate = projects.find(p => p.id === projectId)
-    
+
     if (!projectToDuplicate) {
       return false
     }
@@ -56,6 +56,7 @@ export const projectStore = {
       id: crypto.randomUUID(),
       name: `${projectToDuplicate.name} (Copie)`,
       createdAt: new Date().toISOString(),
+      isPinned: false,
       app: projectToDuplicate.app ? {
         ...projectToDuplicate.app,
         commands: projectToDuplicate.app.commands.map(cmd => ({
@@ -74,5 +75,17 @@ export const projectStore = {
 
     projects.push(duplicatedProject)
     return this.saveProjects(projects) ? duplicatedProject : false
+  },
+
+  togglePin(projectId) {
+    const projects = this.getProjects()
+    const project = projects.find(p => p.id === projectId)
+
+    if (!project) {
+      return false
+    }
+
+    project.isPinned = !project.isPinned
+    return this.saveProjects(projects)
   }
 }

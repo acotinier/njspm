@@ -2,11 +2,14 @@ import {useState} from 'react'
 import Button from './ui/Button'
 import Text from './ui/Text'
 import {createProject, createProjectConfig} from '../types/project'
+import { Trash2, X, Plus } from 'lucide-react'
 
 const ProjectForm = ({project, onSave, onCancel}) => {
   const [formData, setFormData] = useState({
     name: project?.name || '',
     description: project?.description || '',
+    tags: project?.tags || [],
+    isPinned: project?.isPinned || false,
     app: project?.app || {
       "type": "app",
       "directory": "",
@@ -32,6 +35,7 @@ const ProjectForm = ({project, onSave, onCancel}) => {
   })
 
   const [activeTab, setActiveTab] = useState('general')
+  const [newTag, setNewTag] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -101,6 +105,30 @@ const ProjectForm = ({project, onSave, onCancel}) => {
         commands: prev[type].commands.filter(cmd => cmd.id !== commandId)
       }
     }))
+  }
+
+  const addTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()]
+      }))
+      setNewTag('')
+    }
+  }
+
+  const removeTag = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }))
+  }
+
+  const handleTagKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      addTag()
+    }
   }
 
   const removeConfig = (type) => {
@@ -206,10 +234,7 @@ const ProjectForm = ({project, onSave, onCancel}) => {
                         size="icon"
                         onClick={() => removeCommand(type, command.id)}
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
+                        <Trash2 className="w-5 h-5" />
                       </Button>
                     </div>
                     <input
@@ -308,6 +333,52 @@ const ProjectForm = ({project, onSave, onCancel}) => {
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       placeholder="Une description de votre projet..."
                     />
+                  </div>
+
+                  <div>
+                    <Text variant="label" as="label" className="block mb-2">
+                      Tags
+                    </Text>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          onKeyPress={handleTagKeyPress}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          placeholder="Ajouter un tag..."
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={addTag}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Ajouter
+                        </Button>
+                      </div>
+                      {formData.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {formData.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-md text-sm"
+                            >
+                              {tag}
+                              <button
+                                type="button"
+                                onClick={() => removeTag(tag)}
+                                className="hover:text-blue-900 dark:hover:text-blue-100"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

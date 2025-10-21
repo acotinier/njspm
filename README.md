@@ -91,7 +91,7 @@ Access settings via the gear icon in the top-right corner:
 ## Project Structure
 
 ```
-electron-monit/
+njspm/
 ├── src/
 │   ├── components/       # React components
 │   │   ├── ui/          # Reusable UI components
@@ -151,7 +151,7 @@ The app uses Electron's IPC (Inter-Process Communication) for secure communicati
 
 ### Data Persistence
 
-Projects are stored in `localStorage` under the key `electron-monit-projects`. The data structure includes:
+Projects are stored in `localStorage` under the key `njspm-projects`. The data structure includes:
 - Project name
 - App configuration (directory + commands)
 - API configuration (directory + commands)

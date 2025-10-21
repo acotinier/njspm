@@ -1,15 +1,18 @@
 // App.jsx
 
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useMemo} from 'react'
 import ProjectCard from './components/ProjectCard'
 import EmptyProjectCard from './components/EmptyProjectCard'
 import ProjectForm from './components/ProjectForm'
+import SearchAndFilters from './components/SearchAndFilters'
+import CommandHistoryModal from './components/CommandHistoryModal'
 import Button from './components/ui/Button'
 import Text from './components/ui/Text'
 import SettingsButton from './components/ui/SettingsButton'
 import SettingsModal from './components/SettingsModal'
 import {projectStore} from './services/projectStore'
-import {X, Maximize, Minus} from 'lucide-react'
+import {commandHistory} from './services/commandHistory'
+import {X, Maximize, Minus, Clock} from 'lucide-react'
 
 function App() {
   const [projects, setProjects] = useState([])
@@ -17,6 +20,9 @@ function App() {
   const [showAddProject, setShowAddProject] = useState(false)
   const [editingProject, setEditingProject] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filters, setFilters] = useState({ showPinnedOnly: false, tags: [] })
 
   useEffect(() => {
     setProjects(projectStore.getProjects())
@@ -25,12 +31,32 @@ function App() {
   const handleExecuteCommand = async (projectId, config, command) => {
     setRunningCommands(prev => [...prev, command.id])
 
+    // Find project name for history
+    const project = projects.find(p => p.id === projectId)
+    const projectName = project?.name || 'Unknown Project'
+
     try {
       await window.electronAPI.executeCommand(command.command, config.directory)
+
+      // Add to history
+      commandHistory.addToHistory(
+        projectName,
+        command.name,
+        command.command,
+        config.directory
+      )
     } catch (error) {
       console.error('Error executing command:', error)
     } finally {
       setRunningCommands(prev => prev.filter(id => id !== command.id))
+    }
+  }
+
+  const handleExecuteFromHistory = async (command, workingDirectory) => {
+    try {
+      await window.electronAPI.executeCommand(command, workingDirectory)
+    } catch (error) {
+      console.error('Error executing command from history:', error)
     }
   }
 
@@ -75,6 +101,58 @@ function App() {
     setProjects(projectStore.getProjects())
   }
 
+  const handleTogglePin = (projectId) => {
+    projectStore.togglePin(projectId)
+    setProjects(projectStore.getProjects())
+  }
+
+  // Get all unique tags from all projects
+  const availableTags = useMemo(() => {
+    const tagsSet = new Set()
+    projects.forEach(project => {
+      if (project.tags) {
+        project.tags.forEach(tag => tagsSet.add(tag))
+      }
+    })
+    return Array.from(tagsSet).sort()
+  }, [projects])
+
+  // Filter and search projects
+  const filteredProjects = useMemo(() => {
+    let result = [...projects]
+
+    // Apply pinned filter
+    if (filters.showPinnedOnly) {
+      result = result.filter(p => p.isPinned)
+    }
+
+    // Apply tag filter
+    if (filters.tags && filters.tags.length > 0) {
+      result = result.filter(p =>
+        p.tags && filters.tags.some(tag => p.tags.includes(tag))
+      )
+    }
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(query) ||
+        (p.description && p.description.toLowerCase().includes(query)) ||
+        (p.tags && p.tags.some(tag => tag.toLowerCase().includes(query)))
+      )
+    }
+
+    // Sort: pinned first, then by creation date
+    result.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1
+      if (!a.isPinned && b.isPinned) return 1
+      return new Date(b.createdAt) - new Date(a.createdAt)
+    })
+
+    return result
+  }, [projects, filters, searchQuery])
+
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -98,10 +176,18 @@ function App() {
             </div>
           </div>
 
-          {/* Right section - Settings and window controls */}
+          {/* Right section - History, Settings and window controls */}
           <div className="flex items-center gap-3" style={
             {WebkitAppRegion: 'no-drag'}
           }>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowHistory(true)}
+              title="Historique des commandes"
+            >
+              <Clock className="w-5 h-5" />
+            </Button>
             <SettingsButton onClick={() => setShowSettings(true)}/>
 
             {/* Window controls */}
@@ -132,21 +218,39 @@ function App() {
       {/* Main content with padding-top to account for fixed navbar and padding-bottom for footer */}
       <div className="pt-20 pb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
+        {/* Search and Filters */}
+        <SearchAndFilters
+          onSearchChange={setSearchQuery}
+          onFilterChange={setFilters}
+          availableTags={availableTags}
+          activeFilters={filters}
+        />
+
         <main>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {projects.map(project => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onExecuteCommand={handleExecuteCommand}
-                onEditProject={handleEditProject}
-                onDeleteProject={handleDeleteProject}
-                onDuplicateProject={handleDuplicateProject}
-                runningCommands={runningCommands}
-              />
-            ))}
-            <EmptyProjectCard onClick={() => setShowAddProject(true)}/>
-          </div>
+          {filteredProjects.length === 0 && projects.length > 0 ? (
+            <div className="text-center py-12">
+              <Text variant="h3" className="mb-2">Aucun projet trouvé</Text>
+              <Text variant="bodySmall" className="text-gray-500 dark:text-gray-400">
+                Essayez de modifier vos critères de recherche ou filtres
+              </Text>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredProjects.map(project => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onExecuteCommand={handleExecuteCommand}
+                  onEditProject={handleEditProject}
+                  onDeleteProject={handleDeleteProject}
+                  onDuplicateProject={handleDuplicateProject}
+                  onTogglePin={handleTogglePin}
+                  runningCommands={runningCommands}
+                />
+              ))}
+              <EmptyProjectCard onClick={() => setShowAddProject(true)}/>
+            </div>
+          )}
         </main>
 
         {(showAddProject || editingProject) && (
@@ -161,6 +265,12 @@ function App() {
           isOpen={showSettings}
           onClose={() => setShowSettings(false)}
           onProjectsUpdate={handleProjectsUpdate}
+        />
+
+        <CommandHistoryModal
+          isOpen={showHistory}
+          onClose={() => setShowHistory(false)}
+          onExecuteCommand={handleExecuteFromHistory}
         />
       </div>
 
